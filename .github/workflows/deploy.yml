@@ -28,6 +28,7 @@ jobs:
 
       - name: Derrubar a topologia antiga
         run: |
+          ssh -i ~/.ssh/deploy gr-${{ env.SLUG }}@gr.lab.ayty.org "gr-docker rm -f banco" || true
           ssh -i ~/.ssh/deploy gr-${{ env.SLUG }}@gr.lab.ayty.org "gr-docker rm -f db" || true
           ssh -i ~/.ssh/deploy gr-${{ env.SLUG }}@gr.lab.ayty.org "gr-docker rm -f api" || true
           ssh -i ~/.ssh/deploy gr-${{ env.SLUG }}@gr.lab.ayty.org "gr-docker rm -f front" || true
@@ -58,6 +59,6 @@ jobs:
       
       - name: Conferir que subiu
         run: |
-          ssh -i ~/.ssh/deploy gr-${{ env.SLUG }}@gr.lab.ayty.org "curl --fail --retry 5 --retry-delay 2 http://localhost:${{ env.PORTA }}/"
+          curl --fail --retry 5 --retry-delay 2 http://gr.lab.ayty.org:${{ env.PORTA }}/
           # TODO: pergunte ao servidor se a listagem responde.
           echo "TODO"

@@ -54,19 +54,26 @@ jobs:
 
       - name: Subir banco, API e front
         run: |
-         # 1. Banco de Dados
-          ssh -i ~/.ssh/deploy gr-${{ env.SLUG }}@gr.lab.ayty.org "gr-docker run -d --name banco --network net-db -v pgdata:/var/lib/postgresql/data -e POSTGRES_PASSWORD='${{ secrets.DB_SENHA }}' postgres:17-alpine"
 
-          # 2. API 
-          ssh -i ~/.ssh/deploy gr-${{ env.SLUG }}@gr.lab.ayty.org "gr-docker run -d --name api --network net-db -e DB_HOST=gr-reginaldo-araujo-banco -e DB_PASSWORD='${{ secrets.DB_SENHA }}' gr-atv2-api:1"
-          ssh -i ~/.ssh/deploy gr-${{ env.SLUG }}@gr.lab.ayty.org "gr-docker network connect net-api api"
-          ssh -i ~/.ssh/deploy gr-${{ env.SLUG }}@gr.lab.ayty.org "gr-docker restart api"
+          # 1. Banco de Dados
+          ssh -i ~/.ssh/deploy gr-${{ env.SLUG }}@gr.lab.ayty.org \
+            "gr-docker run -d --name banco --network net-db -v pgdata:/var/lib/postgresql/data -e POSTGRES_PASSWORD='${{ secrets.DB_SENHA }}' postgres:17-alpine"
+
+          # 2. API
+          ssh -i ~/.ssh/deploy gr-${{ env.SLUG }}@gr.lab.ayty.org \
+            "gr-docker run -d --name api --network net-db -e DB_HOST=gr-${{ env.SLUG }}-banco -e DB_PASSWORD='${{ secrets.DB_SENHA }}' gr-atv2-api:1"
           
-          ssh -i ~/.ssh/deploy gr-${{ env.SLUG }}@gr.lab.ayty.org "gr-docker network connect net-api api"
+          ssh -i ~/.ssh/deploy gr-${{ env.SLUG }}@gr.lab.ayty.org \
+            "gr-docker network connect net-api api"
+            
+          # O truque ninja do restart para consertar o DNS do Alpine
+          ssh -i ~/.ssh/deploy gr-${{ env.SLUG }}@gr.lab.ayty.org \
+            "gr-docker restart api"
 
           # 3. Front-end
-          ssh -i ~/.ssh/deploy gr-${{ env.SLUG }}@gr.lab.ayty.org "gr-docker run -d --name front --network net-api -p ${{ env.PORTA }}:80 -e API=gr-reginaldo-araujo-api -e DEPLOY_SHA=${{ github.sha }} gr-atv2-front:1"
-      
+          ssh -i ~/.ssh/deploy gr-${{ env.SLUG }}@gr.lab.ayty.org \
+            "gr-docker run -d --name front --network net-api -p ${{ env.PORTA }}:80 -e API=gr-${{ env.SLUG }}-api -e DEPLOY_SHA=${{ github.sha }} gr-atv2-front:1"
+            
       - name: Conferir que subiu
         run: |
           curl --fail --silent --show-error http://gr.lab.ayty.org:${{env.PORTA}}/

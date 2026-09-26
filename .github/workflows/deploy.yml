@@ -56,35 +56,18 @@ jobs:
 
       - name: Subir banco, API e front
         run: |
-          # Banco
-          ssh -i ~/.ssh/deploy gr-${{ env.SLUG }}@gr.lab.ayty.org \
-            "gr-docker run postgres:17-alpine \
-            --name banco \
-            --network net-db \
-            -v pgdata:/var/lib/postgresql/data \
-            -e POSTGRES_PASSWORD=${{ secrets.DB_SENHA }}"
+          ssh -i ~/.ssh/deploy gr-${{ env.SLUG }}@gr.lab.ayty.org "gr-docker run postgres:17-alpine \--name banco \--network net-db \-v pgdata:/var/lib/postgresql/data \-e POSTGRES_PASSWORD=${{ secrets.DB_SENHA }}"
+          ssh -i ~/.ssh/deploy gr-${{ env.SLUG }}@gr.lab.ayty.org "gr-docker run gr-atv2-api:1 \--name api \--network net-db \-e DB_HOST=gr-reginaldo-araujo-banco \-e DB_PASSWORD=${{ secrets.DB_SENHA }}"
 
-          # API
-          ssh -i ~/.ssh/deploy gr-${{ env.SLUG }}@gr.lab.ayty.org \
-            "gr-docker run gr-atv2-api:1 \
-            --name api \
-            --network net-db \
-            -e DB_HOST=gr-reginaldo-araujo-banco \
-            -e DB_PASSWORD=${{ secrets.DB_SENHA }}"
+          ssh -i ~/.ssh/deploy gr-${{ env.SLUG }}@gr.lab.ayty.org "gr-docker network connect net-api api"
 
-          # Coloca a API também na rede do front
-          ssh -i ~/.ssh/deploy gr-${{ env.SLUG }}@gr.lab.ayty.org \
-            "gr-docker network connect net-api api"
-
-          # Front
-          ssh -i ~/.ssh/deploy gr-${{ env.SLUG }}@gr.lab.ayty.org \
-            "gr-docker run gr-atv2-front:1 \
-            --name front \
-            --network net-api \
-            -p ${{ env.PORTA }}:80 \
-            -e API=gr-reginaldo-araujo-api \
-            -e DEPLOY_SHA=${{ github.sha }}"
-            
+          ssh -i ~/.ssh/deploy gr-${{ env.SLUG }}@gr.lab.ayty.org "gr-docker run gr-atv2-front:1 \
+          --name front \
+          --network net-api \
+          -p ${{ env.PORTA }}:80 \
+          -e API=gr-reginaldo-araujo-api \
+          -e DEPLOY_SHA=${{ github.sha }}"
+          
       - name: Conferir que subiu
         run: |
           curl --fail \

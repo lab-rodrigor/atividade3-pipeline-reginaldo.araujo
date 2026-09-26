@@ -67,6 +67,6 @@ jobs:
       
       - name: Conferir que subiu
         run: |
-          curl --fail --silent --show-error \ http://gr.lab.ayty.org:${{env.PORTA}}/
+          curl --fail --silent --show-error http://gr.lab.ayty.org:${{env.PORTA}}/
           # TODO: pergunte ao servidor se a listagem responde.
           echo "TODO"

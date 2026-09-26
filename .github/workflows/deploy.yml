@@ -57,8 +57,10 @@ jobs:
          # 1. Banco de Dados
           ssh -i ~/.ssh/deploy gr-${{ env.SLUG }}@gr.lab.ayty.org "gr-docker run -d --name banco --network net-db -v pgdata:/var/lib/postgresql/data -e POSTGRES_PASSWORD='${{ secrets.DB_SENHA }}' postgres:17-alpine"
 
-          # 2. API
+          # 2. API 
           ssh -i ~/.ssh/deploy gr-${{ env.SLUG }}@gr.lab.ayty.org "gr-docker run -d --name api --network net-db -e DB_HOST=gr-reginaldo-araujo-banco -e DB_PASSWORD='${{ secrets.DB_SENHA }}' gr-atv2-api:1"
+          ssh -i ~/.ssh/deploy gr-${{ env.SLUG }}@gr.lab.ayty.org "gr-docker network connect net-api api"
+          ssh -i ~/.ssh/deploy gr-${{ env.SLUG }}@gr.lab.ayty.org "gr-docker restart api"
           
           ssh -i ~/.ssh/deploy gr-${{ env.SLUG }}@gr.lab.ayty.org "gr-docker network connect net-api api"
 

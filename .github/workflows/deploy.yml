@@ -46,20 +46,16 @@ jobs:
 
       - name: Subir banco, API e front
         run: |
-          # 1. Banco de Dados
-          ssh -i ~/.ssh/deploy gr-${{ env.SLUG }}@gr.lab.ayty.org "gr-docker run -d --name db --network net-db -v pgdata:/var/lib/postgresql/data -e POSTGRES_PASSWORD='${{ secrets.DB_SENHA }}' postgres:15-alpine"
+          # 1. Banco de Dados 
+          ssh -i ~/.ssh/deploy gr-${{ env.SLUG }}@gr.lab.ayty.org "gr-docker run -d --name db --network net-db -v pgdata:/var/lib/postgresql/data -e POSTGRES_PASSWORD='${{ secrets.DB_SENHA }}' postgres:17-alpine"
 
-          # 2. API (Conectada à net-db e depois anexada à net-api)
-          ssh -i ~/.ssh/deploy gr-${{ env.SLUG }}@gr.lab.ayty.org "gr-docker run -d --name api --network net-db -e DB_HOST=db -e DB_PASSWORD='${{ secrets.DB_SENHA }}' lab-rodrigor/atividade2-api"
+          # 2. API
+          ssh -i ~/.ssh/deploy gr-${{ env.SLUG }}@gr.lab.ayty.org "gr-docker run -d --name api --network net-db -e DB_HOST=db -e DB_PASSWORD='${{ secrets.DB_SENHA }}' gr-atv2-api:1"
           ssh -i ~/.ssh/deploy gr-${{ env.SLUG }}@gr.lab.ayty.org "gr-docker network connect net-api api"
 
-          # 3. Front-end (Conectado à net-api e exposto na sua PORTA)
-          ssh -i ~/.ssh/deploy gr-${{ env.SLUG }}@gr.lab.ayty.org "gr-docker run -d --name front --network net-api -p ${{ env.PORTA }}:80 -e DEPLOY_SHA=${{ github.sha }} lab-rodrigor/atividade2-front"
-          # TODO: os três containers, na ordem certa.
-          # O front precisa receber o commit que o deploy publicou:
-          #   -e DEPLOY_SHA=${{ github.sha }}
-          echo "TODO"
-
+          # 3. Front-end 
+          ssh -i ~/.ssh/deploy gr-${{ env.SLUG }}@gr.lab.ayty.org "gr-docker run -d --name front --network net-api -p ${{ env.PORTA }}:80 -e DEPLOY_SHA=${{ github.sha }} gr-atv2-front:1"
+      
       - name: Conferir que subiu
         run: |
           ssh -i ~/.ssh/deploy gr-${{ env.SLUG }}@gr.lab.ayty.org "curl --fail --retry 5 --retry-delay 2 http://localhost:${{ env.PORTA }}/"

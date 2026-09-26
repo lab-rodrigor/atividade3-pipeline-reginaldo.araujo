@@ -62,16 +62,17 @@ jobs:
             --name banco \
             --network net-db \
             -v pgdata:/var/lib/postgresql/data \
-            -e POSTGRES_PASSWORD='${{ secrets.DB_SENHA }}'"
+            -e POSTGRES_PASSWORD=${{ secrets.DB_SENHA }}"
 
           # API
           ssh -i ~/.ssh/deploy gr-${{ env.SLUG }}@gr.lab.ayty.org \
             "gr-docker run gr-atv2-api:1 \
             --name api \
             --network net-db \
-            -e DB_HOST=banco \
-            -e DB_PASSWORD='${{ secrets.DB_SENHA }}'"
+            -e DB_HOST=gr-reginaldo-araujo-banco \
+            -e DB_PASSWORD=${{ secrets.DB_SENHA }}"
 
+          # Coloca a API também na rede do front
           ssh -i ~/.ssh/deploy gr-${{ env.SLUG }}@gr.lab.ayty.org \
             "gr-docker network connect net-api api"
 
@@ -81,6 +82,7 @@ jobs:
             --name front \
             --network net-api \
             -p ${{ env.PORTA }}:80 \
+            -e API=gr-reginaldo-araujo-api \
             -e DEPLOY_SHA=${{ github.sha }}"
             
       - name: Conferir que subiu
